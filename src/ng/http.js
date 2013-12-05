@@ -135,7 +135,8 @@ function $HttpProvider() {
   this.$get = ['$httpBackend', '$browser', '$cacheFactory', '$rootScope', '$q', '$injector',
       function($httpBackend, $browser, $cacheFactory, $rootScope, $q, $injector) {
 
-    var defaultCache = $cacheFactory('$http');
+    var defaultCache = $cacheFactory('$http'),
+        coalescePromise = null;
 
     /**
      * Interceptors stored in reverse order. Inner interceptors before outer interceptors.
@@ -988,7 +989,10 @@ function $HttpProvider() {
         }
 
         resolvePromise(response, status, headersString);
-        if (!$rootScope.$$phase) $rootScope.$apply();
+        if (!$rootScope.$$phase) {
+          $timeout.cancel(coalescePromise);
+          coalescePromise = $timeout(noop);
+        }
       }
 
 
