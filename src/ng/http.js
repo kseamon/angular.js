@@ -988,10 +988,10 @@ function $HttpProvider() {
           }
         }
 
-        resolvePromise(response, status, headersString);
-        if (!$rootScope.$$phase) {
-          $timeout.cancel(coalescePromise);
-          coalescePromise = $timeout(noop);
+        if ($rootScope.$$phase) {
+          resolvePromise(response, status, headersString);
+        } else {
+          $rootScope.$$applyAsync(bind(null, resolvePromise, response, status, headersString));
         }
       }
 

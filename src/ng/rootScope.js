@@ -130,6 +130,8 @@ function $RootScopeProvider(){
       this['this'] = this.$root =  this;
       this.$$destroyed = false;
       this.$$asyncQueue = [];
+      this.$$applyAsyncQueue = [];
+      this.$$applyAsyncTimerId = null;
       this.$$postDigestQueue = [];
       this.$$listeners = {};
       this.$$isolateBindings = {};
@@ -757,7 +759,7 @@ function $RootScopeProvider(){
         if (!$rootScope.$$phase && !$rootScope.$$asyncQueue.length) {
           $browser.defer(function() {
             if ($rootScope.$$asyncQueue.length) {
-              $rootScope.$digest();
+              $rootScope.$$applyAsync();
             }
           });
         }
@@ -830,6 +832,18 @@ function $RootScopeProvider(){
             throw e;
           }
         }
+      },
+
+      /**
+       * JSDoc go here.
+       */
+      $$applyAsync: function(expr) {
+        expr && this.$$applyAsyncQueue.push(expr);
+
+        $browser.defer.cancel(this.$$applyAsyncTimerId);
+        this.$$applyAsyncTimerId = $browser.defer(bind(this, this.$apply, function() {
+          forEach(this.$$applyAsyncQueue, this.$eval);
+        }));
       },
 
       /**
